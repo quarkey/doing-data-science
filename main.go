@@ -8,7 +8,7 @@ Exercice: EDA - Exploratory Data Analysis
 There are 31 datasets named nyt1.csv, nyt2.csv and so on, which you can find here:
 https://github.com/oreillymedia/doing_data_sience
 
-1. age_groups at 18-24, 25-34, 35-44, 45-54, 56-64 and 65+
+1. age_groups at <18, 18-24, 25-34, 35-44, 45-54, 56-64 and 65+
 
 2. plot the distributions of number impression and
 
@@ -25,20 +25,29 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 const (
-	url        = "http://stat.columbia.edu/~rachel/datasets/"
-	fileregex  = `(\d.)`
-	outputpath = "dataset"
+	url          = "http://stat.columbia.edu/~rachel/datasets/"
+	fileregex    = `(\d.)`
+	downloadpath = "download"
 )
+
+var wg sync.WaitGroup
 
 func main() {
 	urls := []string{
 		"http://stat.columbia.edu/~rachel/datasets/nyt1.csv",
 		"http://stat.columbia.edu/~rachel/datasets/nyt2.csv",
+		"http://stat.columbia.edu/~rachel/datasets/nyt3.csv",
+		"http://stat.columbia.edu/~rachel/datasets/nyt4.csv",
+		"http://stat.columbia.edu/~rachel/datasets/nyt5.csv",
+		"http://stat.columbia.edu/~rachel/datasets/nyt6.csv",
+		"http://stat.columbia.edu/~rachel/datasets/nyt7.csv",
+		"http://stat.columbia.edu/~rachel/datasets/nyt8.csv",
 	}
-	if err := Download(urls, outputpath); err != nil {
+	if err := Download(urls, downloadpath); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -49,38 +58,26 @@ func Download(urls []string, dest string) error {
 	if err != nil {
 		log.Fatalf("cannot stat desination folder: %v\n", err)
 	}
-	for i, url := range urls {
-		fmt.Printf("[%d] => %s\n", i, url)
-
-		resp, err := http.Get(url)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer resp.Body.Close()
-
-		out, err := os.Create(filepath.Base(url))
-		if err != nil {
-			return fmt.Errorf("Unable to create file: %v", err)
-		}
-		defer out.Close()
-		io.Copy(out, resp.Body)
-
+	for _, url := range urls {
+		wg.Add(1)
+		go download(url, dest)
 	}
-	// resp, err := http.Get("http://stat.columbia.edu/~rachel/datasets/nyt1.csv")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer resp.Body.Close()
-
-	// if resp.StatusCode != 200 {
-	// 	fmt.Println("There was an error with your request:", resp.StatusCode)
-	// }
-
-	// buf := bufio.NewScanner(resp.Body)
-	// i := 0
-	// for buf.Scan() {
-	// 	fmt.Printf("[%d] buffered: %s\n", i, buf.Text())
-	// 	i++
-	// }
+	wg.Wait()
 	return nil
+}
+func download(url, dest string) {
+	defer wg.Done()
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	fmt.Printf("downloading file %s\n", url)
+	out, err := os.Create(dest + "/" + filepath.Base(url))
+	if err != nil {
+		fmt.Printf("Unable to create file: %v\n", err)
+	}
+	defer out.Close()
+	io.Copy(out, resp.Body)
+	fmt.Printf("%s done!\n", filepath.Base(url))
 }
