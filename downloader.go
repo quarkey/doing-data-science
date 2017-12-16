@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 const (
@@ -52,13 +53,12 @@ func main() {
 func buildURLs(url, sprintf string, ntimes int) (urls []string) {
 	for i := 1; i < ntimes+1; i++ {
 		url := url + fmt.Sprintf(sprintf, i)
-		// fmt.Println("builing url:", url)
 		urls = append(urls, url)
 	}
 	return urls
 }
 
-// Download file from urls and save output to destitation folder concurrently
+// download download files from urls and save output to destitation concurrently
 func download(urls []string, dest string) error {
 	_, err := os.Stat(dest)
 	if err != nil {
@@ -72,18 +72,19 @@ func download(urls []string, dest string) error {
 	return nil
 }
 func fetch(url, dest string) {
+	start := time.Now()
 	defer wg.Done()
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	fmt.Printf("downloading file %s\n", url)
+	fmt.Printf("[%s] downloading file %s ...\n", start.Format("15:04:05"), url)
 	out, err := os.Create(dest + "/" + filepath.Base(url))
 	if err != nil {
 		fmt.Printf("Unable to create file: %v\n", err)
 	}
 	defer out.Close()
 	io.Copy(out, resp.Body)
-	fmt.Printf("%s done!\n", filepath.Base(url))
+	fmt.Printf("[%s] %s downloaded in %s!\n", time.Now().Format("15:04:05"), filepath.Base(url), time.Since(start))
 }
