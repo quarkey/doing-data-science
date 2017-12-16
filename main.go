@@ -19,6 +19,7 @@ https://github.com/oreillymedia/doing_data_sience
 package main
 
 import (
+	"fmt"
 	"log"
 	"sync"
 )
@@ -32,17 +33,18 @@ const (
 var wg sync.WaitGroup
 
 func main() {
-	urls := []string{
-		"http://stat.columbia.edu/~rachel/datasets/nyt1.csv",
-		"http://stat.columbia.edu/~rachel/datasets/nyt2.csv",
-		"http://stat.columbia.edu/~rachel/datasets/nyt3.csv",
-		"http://stat.columbia.edu/~rachel/datasets/nyt4.csv",
-		"http://stat.columbia.edu/~rachel/datasets/nyt5.csv",
-		"http://stat.columbia.edu/~rachel/datasets/nyt6.csv",
-		"http://stat.columbia.edu/~rachel/datasets/nyt7.csv",
-		"http://stat.columbia.edu/~rachel/datasets/nyt8.csv",
-	}
+	urls := buildURLs("http://stat.columbia.edu/~rachel/datasets/", "nyt%d.csv", 31)
 	if err := Download(urls, downloadpath); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// BuildURLs is creating urls
+func buildURLs(url, sprintf string, ntimes int) (urls []string) {
+	for i := 1; i < ntimes+1; i++ {
+		url := url + fmt.Sprintf(sprintf, i)
+		// fmt.Println("builing url:", url)
+		urls = append(urls, url)
+	}
+	return urls
 }
