@@ -25,8 +25,6 @@ import (
 )
 
 const (
-	url          = "http://stat.columbia.edu/~rachel/datasets/"
-	fileregex    = `(\d.)`
 	downloadpath = "download"
 )
 
